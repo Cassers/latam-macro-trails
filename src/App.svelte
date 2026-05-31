@@ -81,17 +81,10 @@
             5 · Ranking de tendencias <span class="font-normal" style="color:var(--muted)">— variación 2024 vs 2023</span>
         </h2>
         <p class="text-xs mb-3" style="color:var(--muted)">
-            <span style="color:#22c55e">Verde = mejora</span> (PIB acelera · deuda baja · riesgo baja),
-            <span style="color:#ef4444">rojo = empeora</span>. La columna <b>Señales</b> cuenta cuántas de las 3 mejoraron (0–3).
-            Empates se ordenan por el crecimiento real del PIB 2024.
+            Δ = variación 2024 vs 2023. Señales = nº de variables con variación favorable
+            (PIB Δ&gt;0, Deuda Δ&lt;0, EMBI Δ&lt;0). Orden: por señales y, en empate, por crecimiento del PIB 2024.
         </p>
         <RankingTable {activeList} {theme} />
-        <p class="text-xs mt-3" style="color:var(--muted)">
-            ⚠️ <b style="color:var(--text)">Leer con contexto:</b> esto mide <i>tendencia</i> (cambio), no <i>nivel</i> de salud.
-            Argentina puntúa alto porque mejora desde una crisis profunda — pero la fuerte baja de su deuda es
-            <b>nominal</b> (efecto de la devaluación), no pago real, y sigue en recesión (PIB −1,3%). Un score mecánico
-            sin contexto engaña.
-        </p>
     </section>
 
     <footer class="mt-5 border-t pt-4 text-xs leading-relaxed" style="color:var(--muted); border-color:var(--border)">
