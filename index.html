@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latam Macro Trails - PIB vs Riesgo País</title>
+    <title>Latam Macro Trails — PIB vs Deuda (datos reales BM + FMI)</title>
     <!-- Tailwind CSS para diseño rápido y limpio -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- D3.js v7 para la visualización de datos -->
@@ -24,21 +24,29 @@
         }
         .trail-path {
             fill: none;
-            stroke-width: 3.5px;
+            stroke-width: 3px;
             stroke-linecap: round;
             stroke-linejoin: round;
             transition: stroke-width 0.2s, opacity 0.2s;
         }
         .tooltip {
             position: absolute;
-            background: rgba(24, 24, 27, 0.95);
+            background: rgba(24, 24, 27, 0.97);
             border: 1px solid #3f3f46;
-            padding: 10px;
+            padding: 10px 12px;
             border-radius: 6px;
             font-size: 12px;
             pointer-events: none;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             z-index: 50;
+        }
+        select {
+            background-color: #18181c;
+            border: 1px solid #3f3f46;
+            color: #e1e1e6;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -46,11 +54,19 @@
 
     <!-- Encabezado -->
     <header class="mb-4">
-        <h1 class="text-2xl font-bold text-[#63e2b7]">Trayectorias Macroeconómicas en Latam (2017 - 2024)</h1>
-        <p class="text-sm text-gray-400 mt-1">
-            Inspirado en <span class="italic">State of JS</span> (`image_9733a3.jpg`). Visualiza el "viaje" dinámico del ciclo económico: 
-            Eje X (Aceleración del PIB) vs Eje Y (Variación del Riesgo País EMBI).
+        <h1 class="text-2xl font-bold text-[#63e2b7]">Trayectorias Macroeconómicas en Latinoamérica (2016 – 2024)</h1>
+        <p class="text-sm text-gray-400 mt-1 max-w-4xl">
+            Cada línea es el "viaje" de una economía año a año:
+            <span class="text-gray-200 font-semibold">Eje X = Crecimiento real del PIB (%)</span> ·
+            <span class="text-gray-200 font-semibold">Eje Y = Deuda pública bruta (% del PIB)</span>.
+            El punto grande marca el último dato (2024). Pasá el cursor por cada punto para ver el detalle.
         </p>
+        <div class="mt-3 flex items-center gap-3">
+            <label for="focus" class="text-xs text-gray-400">Resaltar país:</label>
+            <select id="focus">
+                <option value="all">Todos</option>
+            </select>
+        </div>
     </header>
 
     <!-- Contenedor Principal del Gráfico -->
@@ -59,205 +75,263 @@
         <div id="tooltip" class="tooltip opacity-0"></div>
     </main>
 
-    <!-- Leyenda Inferior Estilo State of JS -->
-    <footer class="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-[#29292e] pt-4 text-xs text-gray-400">
-        <div class="flex items-center gap-6">
-            <span class="flex items-center gap-2"><div class="w-3 h-3 bg-[#63e2b7] rounded-full"></div> Cuadrante Inferior Derecho: Convergencia Ideal (PIB ↑, Riesgo ↓)</span>
-            <span class="flex items-center gap-2"><div class="w-3 h-3 bg-[#f25f5c] rounded-full"></div> Cuadrante Superior Izquierdo: Mayor Alerta (PIB ↓, Riesgo ↑)</span>
+    <!-- Pie con fuentes -->
+    <footer class="mt-4 flex flex-wrap items-start justify-between gap-4 border-t border-[#29292e] pt-4 text-xs text-gray-400">
+        <div class="flex flex-col gap-1">
+            <span class="flex items-center gap-2"><div class="w-3 h-3 bg-[#63e2b7] rounded-full"></div> Abajo-derecha: crece y se endeuda poco (saludable)</span>
+            <span class="flex items-center gap-2"><div class="w-3 h-3 bg-[#f25f5c] rounded-full"></div> Arriba-izquierda: se estanca y se endeuda mucho (alerta)</span>
         </div>
-        <div class="text-right">
-            *Datos reales consolidados de CEPAL, Banco Mundial e InfolatAm EMBI (J.P. Morgan).
+        <div class="text-right max-w-md">
+            <span class="text-gray-300 font-semibold">Datos reales verificados:</span><br>
+            PIB: Banco Mundial (NY.GDP.MKTP.KD.ZG). Deuda: FMI WEO, deuda bruta del gobierno general (% PIB).<br>
+            <span class="italic">Ecuador 2024: PIB aún no publicado por el BM (la línea cierra en 2023).</span>
         </div>
     </footer>
 
     <!-- Lógica de D3.js -->
     <script>
-        // Matrix extendida de datos (Varianza acumulada año tras año)
-        // Estructura: [Año, Varianza PIB, Varianza EMBI, Varianza Deuda]
+        // Datos REALES. Estructura por punto: { year, pib (% crecimiento real, Banco Mundial), deuda (% PIB, FMI WEO) }
         const data = {
             "Uruguay": [
-                { year: 2017, pib: 0.3, embi: -0.2, deuda: 1.0 },
-                { year: 2018, pib: -1.1, embi: 0.1, deuda: 2.0 },
-                { year: 2019, pib: -0.1, embi: 0.1, deuda: 4.0 },
-                { year: 2020, pib: -6.5, embi: 0.2, deuda: 11.0 },
-                { year: 2021, pib: 11.4, embi: -0.4, deuda: -7.0 },
-                { year: 2022, pib: -0.6, embi: 0.0, deuda: -5.0 },
-                { year: 2023, pib: -4.3, embi: -0.2, deuda: 2.0 },
-                { year: 2024, pib: 2.6, embi: -0.1, deuda: 2.0 }
+                { year: 2016, pib: 1.7,  deuda: 61.6 },
+                { year: 2017, pib: 1.7,  deuda: 65.0 },
+                { year: 2018, pib: 0.5,  deuda: 65.7 },
+                { year: 2019, pib: 0.7,  deuda: 65.8 },
+                { year: 2020, pib: -7.4, deuda: 70.8 },
+                { year: 2021, pib: 5.3,  deuda: 67.8 },
+                { year: 2022, pib: 4.7,  deuda: 64.4 },
+                { year: 2023, pib: 0.4,  deuda: 64.5 },
+                { year: 2024, pib: 3.4,  deuda: 64.0 }
             ],
             "Chile": [
-                { year: 2017, pib: 1.6, embi: -0.1, deuda: 2.0 },
-                { year: 2018, pib: 0.7, embi: 0.2, deuda: 2.0 },
-                { year: 2019, pib: -3.2, embi: 0.2, deuda: 3.0 },
-                { year: 2020, pib: -6.8, embi: 0.4, deuda: 5.0 },
-                { year: 2021, pib: 17.7, embi: 0.3, deuda: 3.0 },
-                { year: 2022, pib: -9.3, embi: 0.2, deuda: 2.0 },
-                { year: 2023, pib: -2.2, embi: -0.5, deuda: 2.0 },
-                { year: 2024, pib: 2.4, embi: 0.1, deuda: 1.0 }
+                { year: 2016, pib: 2.0,  deuda: 21.0 },
+                { year: 2017, pib: 1.4,  deuda: 23.6 },
+                { year: 2018, pib: 4.0,  deuda: 25.1 },
+                { year: 2019, pib: 0.7,  deuda: 28.3 },
+                { year: 2020, pib: -6.1, deuda: 32.4 },
+                { year: 2021, pib: 11.3, deuda: 36.3 },
+                { year: 2022, pib: 2.1,  deuda: 38.0 },
+                { year: 2023, pib: 0.5,  deuda: 39.4 },
+                { year: 2024, pib: 2.6,  deuda: 41.3 }
             ],
             "Perú": [
-                { year: 2017, pib: -1.5, embi: -0.1, deuda: 1.0 },
-                { year: 2018, pib: 1.5, embi: 0.2, deuda: 1.0 },
-                { year: 2019, pib: -1.8, embi: -0.1, deuda: 1.0 },
-                { year: 2020, pib: -13.2, embi: 0.8, deuda: 9.0 },
-                { year: 2021, pib: 24.3, embi: -0.3, deuda: -2.0 },
-                { year: 2022, pib: -10.6, embi: 0.1, deuda: 1.0 },
-                { year: 2023, pib: -3.3, embi: -0.2, deuda: 0.0 },
-                { year: 2024, pib: 3.9, embi: 0.1, deuda: 1.0 }
+                { year: 2016, pib: 4.0,   deuda: 24.5 },
+                { year: 2017, pib: 2.5,   deuda: 25.8 },
+                { year: 2018, pib: 4.0,   deuda: 26.3 },
+                { year: 2019, pib: 2.2,   deuda: 27.2 },
+                { year: 2020, pib: -10.9, deuda: 35.8 },
+                { year: 2021, pib: 13.4,  deuda: 36.5 },
+                { year: 2022, pib: 2.7,   deuda: 34.7 },
+                { year: 2023, pib: -0.4,  deuda: 33.2 },
+                { year: 2024, pib: 3.3,   deuda: 33.3 }
             ],
             "Brasil": [
-                { year: 2017, pib: 4.6, embi: -0.4, deuda: -4.0 },
-                { year: 2018, pib: 0.5, embi: 0.3, deuda: 3.0 },
-                { year: 2019, pib: 0.4, embi: -0.2, deuda: -1.0 },
-                { year: 2020, pib: -4.5, embi: 0.6, deuda: 14.0 },
-                { year: 2021, pib: 8.3, embi: 0.1, deuda: -10.0 },
-                { year: 2022, pib: -2.0, embi: -0.4, deuda: -5.0 },
-                { year: 2023, pib: -0.1, embi: -0.6, deuda: 1.0 },
-                { year: 2024, pib: 0.5, embi: 0.1, deuda: 2.0 }
+                { year: 2016, pib: -3.3, deuda: 78.3 },
+                { year: 2017, pib: 1.3,  deuda: 83.7 },
+                { year: 2018, pib: 1.8,  deuda: 85.6 },
+                { year: 2019, pib: 1.2,  deuda: 87.1 },
+                { year: 2020, pib: -3.3, deuda: 96.0 },
+                { year: 2021, pib: 4.8,  deuda: 90.1 },
+                { year: 2022, pib: 3.0,  deuda: 85.3 },
+                { year: 2023, pib: 3.2,  deuda: 84.7 },
+                { year: 2024, pib: 3.4,  deuda: 87.3 }
             ],
             "México": [
-                { year: 2017, pib: -0.5, embi: 0.1, deuda: -1.0 },
-                { year: 2018, pib: 0.1, embi: 0.2, deuda: -1.0 },
-                { year: 2019, pib: -2.4, embi: 0.3, deuda: 1.0 },
-                { year: 2020, pib: -7.8, embi: 1.5, deuda: 9.0 },
-                { year: 2021, pib: 12.7, embi: -0.6, deuda: -3.0 },
-                { year: 2022, pib: -0.8, embi: 0.2, deuda: -2.0 },
-                { year: 2023, pib: -0.7, embi: -0.2, deuda: -1.0 },
-                { year: 2024, pib: -1.4, embi: 0.3, deuda: 1.0 }
+                { year: 2016, pib: 2.6,  deuda: 56.7 },
+                { year: 2017, pib: 1.9,  deuda: 54.1 },
+                { year: 2018, pib: 2.0,  deuda: 53.6 },
+                { year: 2019, pib: -0.3, deuda: 53.3 },
+                { year: 2020, pib: -8.4, deuda: 60.1 },
+                { year: 2021, pib: 5.7,  deuda: 57.2 },
+                { year: 2022, pib: 3.7,  deuda: 54.1 },
+                { year: 2023, pib: 3.3,  deuda: 52.7 },
+                { year: 2024, pib: 1.4,  deuda: 55.5 }
             ],
             "Colombia": [
-                { year: 2017, pib: -0.7, embi: -0.1, deuda: 1.0 },
-                { year: 2018, pib: 1.2, embi: 0.2, deuda: 3.0 },
-                { year: 2019, pib: 0.6, embi: -0.1, deuda: 1.0 },
-                { year: 2020, pib: -10.2, embi: 1.1, deuda: 13.0 },
-                { year: 2021, pib: 18.0, embi: 0.6, deuda: -4.0 },
-                { year: 2022, pib: -3.7, embi: 0.3, deuda: -3.0 },
-                { year: 2023, pib: -6.7, embi: -0.5, deuda: -2.0 },
-                { year: 2024, pib: 1.0, embi: 0.5, deuda: 1.0 }
+                { year: 2016, pib: 2.1,  deuda: 49.8 },
+                { year: 2017, pib: 1.4,  deuda: 49.4 },
+                { year: 2018, pib: 2.6,  deuda: 53.6 },
+                { year: 2019, pib: 3.2,  deuda: 52.4 },
+                { year: 2020, pib: -7.3, deuda: 65.7 },
+                { year: 2021, pib: 10.8, deuda: 64.0 },
+                { year: 2022, pib: 7.3,  deuda: 60.0 },
+                { year: 2023, pib: 0.7,  deuda: 56.7 },
+                { year: 2024, pib: 1.7,  deuda: 61.3 }
+            ],
+            "Ecuador": [
+                { year: 2016, pib: -1.2, deuda: 43.2 },
+                { year: 2017, pib: 2.4,  deuda: 44.6 },
+                { year: 2018, pib: 1.3,  deuda: 45.9 },
+                { year: 2019, pib: 0.0,  deuda: 51.6 },
+                { year: 2020, pib: -9.2, deuda: 60.8 },
+                { year: 2021, pib: 9.8,  deuda: 62.3 },
+                { year: 2022, pib: 6.2,  deuda: 57.7 },
+                { year: 2023, pib: 2.3,  deuda: 55.5 }
             ],
             "Panamá": [
-                { year: 2017, pib: 0.6, embi: 0.0, deuda: 1.0 },
-                { year: 2018, pib: -1.9, embi: 0.1, deuda: 2.0 },
-                { year: 2019, pib: -0.7, embi: 0.1, deuda: 6.0 },
-                { year: 2020, pib: -20.9, embi: 0.3, deuda: 22.0 },
-                { year: 2021, pib: 33.7, embi: 0.3, deuda: -5.0 },
-                { year: 2022, pib: -5.0, embi: 0.4, deuda: -4.0 },
-                { year: 2023, pib: -3.5, embi: 0.6, deuda: 1.0 },
-                { year: 2024, pib: -4.8, embi: 0.3, deuda: 2.0 }
+                { year: 2016, pib: 5.0,   deuda: 37.7 },
+                { year: 2017, pib: 5.6,   deuda: 37.3 },
+                { year: 2018, pib: 3.6,   deuda: 39.4 },
+                { year: 2019, pib: 3.3,   deuda: 46.4 },
+                { year: 2020, pib: -17.7, deuda: 69.7 },
+                { year: 2021, pib: 15.8,  deuda: 63.7 },
+                { year: 2022, pib: 10.8,  deuda: 59.8 },
+                { year: 2023, pib: 7.4,   deuda: 60.9 },
+                { year: 2024, pib: 2.9,   deuda: 64.0 }
+            ],
+            "Argentina": [
+                { year: 2016, pib: -2.1, deuda: 53.1 },
+                { year: 2017, pib: 2.8,  deuda: 56.5 },
+                { year: 2018, pib: -2.6, deuda: 85.2 },
+                { year: 2019, pib: -2.0, deuda: 89.8 },
+                { year: 2020, pib: -9.9, deuda: 100.6 },
+                { year: 2021, pib: 10.7, deuda: 80.6 },
+                { year: 2022, pib: 5.3,  deuda: 84.7 },
+                { year: 2023, pib: -1.6, deuda: 154.5 },
+                { year: 2024, pib: -1.3, deuda: 85.1 }
             ]
         };
 
-        // Paleta de colores diferenciada para los rastros (estilo neon cyberpunk)
+        // Paleta diferenciada por país
         const colors = {
-            "Uruguay": "#63e2b7",
-            "Chile": "#70c0e8",
-            "Perú": "#eac15c",
-            "Brasil": "#aa75ff",
-            "México": "#e87a90",
+            "Uruguay":  "#63e2b7",
+            "Chile":    "#70c0e8",
+            "Perú":     "#eac15c",
+            "Brasil":   "#aa75ff",
+            "México":   "#e87a90",
             "Colombia": "#f2994a",
-            "Panamá": "#ff6b6b"
+            "Ecuador":  "#5cd1c4",
+            "Panamá":   "#9ee37d",
+            "Argentina":"#ff6b6b"
         };
 
-        // Configuración de dimensiones del contenedor
-        const container = document.getElementById('chart');
-        const margin = { top: 40, right: 120, bottom: 50, left: 60 };
-        const width = container.clientWidth - margin.left - margin.right;
-        const height = container.clientHeight - margin.top - margin.bottom;
+        // Poblar el selector
+        const focusSelect = document.getElementById('focus');
+        Object.keys(data).forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.textContent = c;
+            focusSelect.appendChild(opt);
+        });
 
-        // Inyectar el objeto SVG en el HTML
+        const container = document.getElementById('chart');
+        const margin = { top: 30, right: 130, bottom: 50, left: 60 };
+        let width = container.clientWidth - margin.left - margin.right;
+        let height = container.clientHeight - margin.top - margin.bottom;
+
         const svg = d3.select("#chart")
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("width", container.clientWidth)
+            .attr("height", container.clientHeight)
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // Escalas (Límites fijos para evitar que los rebotes extremos de Panamá distorsionen todo)
-        const xScale = d3.scaleLinear().domain([-22, 22]).range([0, width]);
-        const yScale = d3.scaleLinear().domain([-2, 2]).range([height, 0]); // Invertido: riesgo positivo sube, negativo baja
+        // Escalas con dominios fijos cubriendo los extremos reales (Panamá 2020 y Argentina 2023)
+        const xScale = d3.scaleLinear().domain([-19, 17]).range([0, width]);
+        const yScale = d3.scaleLinear().domain([18, 160]).range([height, 0]);
 
-        // Líneas de Cuadrante (Ejes Centrales en 0,0)
-        svg.append("line").attr("x1", 0).attr("y1", yScale(0)).attr("x2", width).attr("y2", yScale(0)).attr("class", "axis-line");
-        svg.append("line").attr("x1", xScale(0)).attr("y1", 0).attr("x2", xScale(0)).attr("y2", height).attr("class", "axis-line");
+        // Grilla suave
+        const xTicks = [-15, -10, -5, 0, 5, 10, 15];
+        const yTicks = [20, 40, 60, 80, 100, 120, 140, 160];
+        xTicks.forEach(t => {
+            svg.append("line").attr("class", "grid-line")
+                .attr("x1", xScale(t)).attr("x2", xScale(t)).attr("y1", 0).attr("y2", height);
+            svg.append("text").attr("x", xScale(t)).attr("y", height + 18)
+                .attr("text-anchor", "middle").attr("fill", "#71717a").style("font-size", "10px").text(t + "%");
+        });
+        yTicks.forEach(t => {
+            svg.append("line").attr("class", "grid-line")
+                .attr("y1", yScale(t)).attr("y2", yScale(t)).attr("x1", 0).attr("x2", width);
+            svg.append("text").attr("x", -10).attr("y", yScale(t) + 3)
+                .attr("text-anchor", "end").attr("fill", "#71717a").style("font-size", "10px").text(t + "%");
+        });
 
-        // Etiquetas fijas de los Cuadrantes
-        svg.append("text").attr("x", width - 10).attr("y", yScale(0) + 15).attr("text-anchor", "end").attr("fill", "#4d4d57").text("PIB Acelera →").style("font-size", "10px");
-        svg.append("text").attr("x", 10).attr("y", yScale(0) - 8).attr("text-anchor", "start").attr("fill", "#4d4d57").text("← PIB Desacelerar").style("font-size", "10px");
-        svg.append("text").attr("x", xScale(0) + 8).attr("y", 15).attr("text-anchor", "start").attr("fill", "#4d4d57").text("↑ Riesgo Sube (EMBI)").style("font-size", "10px");
-        svg.append("text").attr("x", xScale(0) + 8).attr("y", height - 10).attr("text-anchor", "start").attr("fill", "#4d4d57").text("↓ Riesgo Baja (EMBI)").style("font-size", "10px");
+        // Etiquetas de ejes
+        svg.append("text").attr("x", width).attr("y", height + 40)
+            .attr("text-anchor", "end").attr("fill", "#a1a1aa").style("font-size", "11px")
+            .text("Crecimiento del PIB (%) →");
+        svg.append("text").attr("transform", "rotate(-90)").attr("x", 0).attr("y", -45)
+            .attr("text-anchor", "end").attr("fill", "#a1a1aa").style("font-size", "11px")
+            .text("↑ Deuda pública (% del PIB)");
 
-        // Generador de líneas suaves para los rastros (Trails)
         const lineGenerator = d3.line()
             .x(d => xScale(d.pib))
-            .y(d => yScale(d.embi))
-            .curve(d3.curveMonotoneX);
+            .y(d => yScale(d.deuda))
+            .curve(d3.curveCatmullRom.alpha(0.5));
 
         const tooltip = d3.select("#tooltip");
+        const groups = {};
 
-        // Pintar las trayectorias de cada país
         Object.entries(data).forEach(([country, values]) => {
             const color = colors[country];
+            const g = svg.append("g").attr("class", "country-group");
+            groups[country] = g;
 
-            // Grupo contenedor por país para manejar eventos de opacidad
-            const countryGroup = svg.append("g").attr("class", `country-group-${country.toLowerCase()}`);
-
-            // Dibujar la línea de rastro histórica continua
-            countryGroup.append("path")
+            g.append("path")
                 .datum(values)
                 .attr("class", "trail-path")
                 .attr("d", lineGenerator)
                 .attr("stroke", color)
-                .attr("opacity", 0.4);
+                .attr("opacity", 0.45);
 
-            // Dibujar los nodos temporales (los hitos anuales de la línea)
-            values.forEach((d, i) => {
-                const isFinalYear = d.year === 2024;
-                
-                countryGroup.append("circle")
+            values.forEach(d => {
+                const isFinal = d === values[values.length - 1];
+                g.append("circle")
                     .attr("cx", xScale(d.pib))
-                    .attr("cy", yScale(d.embi))
-                    .attr("r", isFinalYear ? 5 : 3)
-                    .attr("fill", isFinalYear ? color : "#18181c")
+                    .attr("cy", yScale(d.deuda))
+                    .attr("r", isFinal ? 5.5 : 3)
+                    .attr("fill", isFinal ? color : "#18181c")
                     .attr("stroke", color)
                     .attr("stroke-width", 1.5)
                     .attr("cursor", "pointer")
-                    .on("mouseover", function(event) {
-                        // Resaltar el rastro del país enfocado
-                        d3.selectAll(".trail-path").attr("opacity", 0.1);
-                        countryGroup.select(".trail-path").attr("opacity", 1).attr("stroke-width", 5);
-
-                        // Desplegar Tooltip descriptivo
-                        tooltip.style("opacity", 1)
-                            .html(`
-                                <div class="font-bold text-sm mb-1" style="color: ${color}">${country} (${d.year})</div>
-                                <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                                    <span class="text-gray-400">Var. PIB:</span> <span class="font-mono ${d.pib >= 0 ? 'text-green-400' : 'text-red-400'}">${d.pib >= 0 ? '+' : ''}${d.pib}%</span>
-                                    <span class="text-gray-400">Var. EMBI:</span> <span class="font-mono ${d.embi <= 0 ? 'text-green-400' : 'text-red-400'}">${d.embi >= 0 ? '+' : ''}${d.embi * 100} pb</span>
-                                    <span class="text-gray-400">Var. Deuda:</span> <span class="font-mono">${d.deuda >= 0 ? '+' : ''}${d.deuda}%</span>
-                                </div>
-                            `);
+                    .on("mouseover", function () {
+                        highlight(country);
+                        tooltip.style("opacity", 1).html(`
+                            <div class="font-bold text-sm mb-1" style="color:${color}">${country} · ${d.year}</div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                <span class="text-gray-400">PIB:</span>
+                                <span class="font-mono ${d.pib >= 0 ? 'text-green-400' : 'text-red-400'}">${d.pib >= 0 ? '+' : ''}${d.pib}%</span>
+                                <span class="text-gray-400">Deuda/PIB:</span>
+                                <span class="font-mono text-gray-200">${d.deuda}%</span>
+                            </div>`);
                     })
-                    .on("mousemove", function(event) {
-                        tooltip.style("left", (event.pageX + 15) + "px")
-                               .style("top", (event.pageY - 20) + "px");
+                    .on("mousemove", function (event) {
+                        tooltip.style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 20) + "px");
                     })
-                    .on("mouseout", function() {
-                        // Restaurar opacidades base
-                        d3.selectAll(".trail-path").attr("opacity", 0.4).attr("stroke-width", 3.5);
+                    .on("mouseout", function () {
+                        if (focusSelect.value === 'all') resetHighlight();
+                        else highlight(focusSelect.value);
                         tooltip.style("opacity", 0);
                     });
 
-                // Colocar la etiqueta de texto final del país en el nodo de 2024
-                if (isFinalYear) {
-                    countryGroup.append("text")
-                        .attr("x", xScale(d.pib) + 10)
-                        .attr("y", yScale(d.embi) + 4)
+                if (isFinal) {
+                    g.append("text")
+                        .attr("x", xScale(d.pib) + 9)
+                        .attr("y", yScale(d.deuda) + 4)
                         .attr("fill", color)
                         .style("font-size", "11px")
                         .style("font-weight", "600")
                         .text(country);
                 }
             });
+        });
+
+        function highlight(country) {
+            Object.entries(groups).forEach(([name, g]) => {
+                const on = name === country;
+                g.select(".trail-path").attr("opacity", on ? 1 : 0.08).attr("stroke-width", on ? 4.5 : 3);
+                g.attr("opacity", on ? 1 : 0.25);
+            });
+        }
+        function resetHighlight() {
+            Object.values(groups).forEach(g => {
+                g.select(".trail-path").attr("opacity", 0.45).attr("stroke-width", 3);
+                g.attr("opacity", 1);
+            });
+        }
+
+        focusSelect.addEventListener('change', () => {
+            if (focusSelect.value === 'all') resetHighlight();
+            else highlight(focusSelect.value);
         });
     </script>
 </body>
