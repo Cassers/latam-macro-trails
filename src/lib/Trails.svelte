@@ -37,6 +37,12 @@
         svg.append('text').attr('class', 'axis-text').attr('x', w).attr('y', h + 38).attr('text-anchor', 'end').text('Crecimiento PIB (%) →');
         svg.append('text').attr('class', 'axis-text').attr('transform', 'rotate(-90)').attr('x', 0).attr('y', -42).attr('text-anchor', 'end').text('↑ Deuda (% PIB)');
 
+        // Línea de CERO destacada: a su izquierda el PIB cae (recesión), a su derecha crece
+        svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', 0).attr('y2', h)
+            .attr('stroke', css('--axis')).attr('stroke-width', 1.5).attr('stroke-dasharray', '2,3');
+        svg.append('text').attr('class', 'axis-text').attr('x', x(0) - 6).attr('y', 11).attr('text-anchor', 'end').attr('fill', '#ef4444').text('← PIB cae');
+        svg.append('text').attr('class', 'axis-text').attr('x', x(0) + 6).attr('y', 11).attr('text-anchor', 'start').attr('fill', '#22c55e').text('PIB crece →');
+
         const line = d3.line().x(d => x(d.pib)).y(d => y(d.deuda)).curve(d3.curveCatmullRom.alpha(0.5));
 
         countries.filter(c => activeList.includes(c)).forEach(c => {

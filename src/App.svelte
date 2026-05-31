@@ -56,7 +56,7 @@
         <Trails {activeList} {theme} />
     </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <section class="panel rounded-xl p-4">
             <h2 class="text-sm font-semibold mb-1">2 · Crecimiento del PIB (%) por año</h2>
             <TimeSeries {activeList} {theme} dataKey="pib" label="PIB" yDomain={[-19, 17]} zeroLine={true} />
@@ -65,13 +65,21 @@
             <h2 class="text-sm font-semibold mb-1">3 · Deuda pública (% del PIB) por año</h2>
             <TimeSeries {activeList} {theme} dataKey="deuda" label="Deuda" yDomain={[18, 160]} />
         </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">
+                4 · Riesgo país (EMBI, pb) por año
+                <span class="font-normal" style="color:var(--muted)">— escala log</span>
+            </h2>
+            <TimeSeries {activeList} {theme} dataKey="embi" label="EMBI" suffix=" pb"
+                yDomain={[80, 2400]} yTicks={[100, 200, 400, 800, 1600]} logScale={true} />
+        </section>
     </div>
 
     <footer class="mt-5 border-t pt-4 text-xs" style="color:var(--muted); border-color:var(--border)">
         <span class="font-semibold" style="color:var(--text)">Fuentes verificadas:</span>
-        PIB — Banco Mundial (<code>NY.GDP.MKTP.KD.ZG</code>, API oficial). ·
+        PIB — Banco Mundial (<code>NY.GDP.MKTP.KD.ZG</code>). ·
         Deuda — FMI World Economic Outlook (deuda bruta del gobierno general, % PIB). ·
-        Ecuador 2024: contracción de −2,0% confirmada por el Banco Central del Ecuador.
-        <span class="italic">El EMBI / riesgo país se omitió: J.P. Morgan no publica serie histórica pública.</span>
+        EMBI / riesgo país — J.P. Morgan vía Banco Central de Reserva del Perú (cierre de diciembre, en puntos básicos).
+        <span class="italic">Panamá y Uruguay: el BCRP no publica su EMBI, por eso solo figuran 2023–2024 (J.P. Morgan vía Bloomberg Línea); años previos = sin dato.</span>
     </footer>
 </div>
