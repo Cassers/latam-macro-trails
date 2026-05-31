@@ -32,3 +32,5 @@ body {
 .chip.active .dot { opacity: 1; }
 .btn { border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; background: transparent; }
 .btn:hover { color: var(--text); }
+.src { color: #3b9fe0; text-decoration: underline; text-underline-offset: 2px; }
+.src:hover { color: #5fb0ef; }

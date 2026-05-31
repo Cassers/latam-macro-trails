@@ -75,11 +75,30 @@
         </section>
     </div>
 
-    <footer class="mt-5 border-t pt-4 text-xs" style="color:var(--muted); border-color:var(--border)">
+    <footer class="mt-5 border-t pt-4 text-xs leading-relaxed" style="color:var(--muted); border-color:var(--border)">
         <span class="font-semibold" style="color:var(--text)">Fuentes verificadas:</span>
-        PIB — Banco Mundial (<code>NY.GDP.MKTP.KD.ZG</code>). ·
-        Deuda — FMI World Economic Outlook (deuda bruta del gobierno general, % PIB). ·
-        EMBI / riesgo país — J.P. Morgan vía Banco Central de Reserva del Perú (cierre de diciembre, en puntos básicos).
-        <span class="italic">Panamá y Uruguay: el BCRP no publica su EMBI, por eso solo figuran 2023–2024 (J.P. Morgan vía Bloomberg Línea); años previos = sin dato.</span>
+        <ul class="mt-2 space-y-1 list-disc pl-5">
+            <li>
+                <span style="color:var(--text)">PIB (% crecimiento real):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/NY.GDP.MKTP.KD.ZG" target="_blank" rel="noopener">Banco Mundial — indicador NY.GDP.MKTP.KD.ZG</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">Deuda pública (% del PIB):</span>
+                <a class="src" href="https://www.imf.org/external/datamapper/GGXWDG_NGDP" target="_blank" rel="noopener">FMI — World Economic Outlook (deuda bruta del gobierno general)</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">EMBI / riesgo país (pb, cierre de diciembre):</span>
+                <a class="src" href="https://estadisticas.bcrp.gob.pe/estadisticas/series/mensuales/indicadores-de-riesgo-para-paises-emergentes-embig" target="_blank" rel="noopener">J.P. Morgan vía Banco Central de Reserva del Perú (BCRP)</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">Panamá y Uruguay (EMBI 2023–2024):</span>
+                <a class="src" href="https://www.bloomberglinea.com/latinoamerica/asi-evoluciono-el-riesgo-pais-en-latinoamerica-en-2024-el-ranking-de-mexico-a-argentina/" target="_blank" rel="noopener">J.P. Morgan vía Bloomberg Línea</a>
+                — el BCRP no publica su serie; años previos quedan sin dato.
+            </li>
+            <li>
+                <span style="color:var(--text)">Ecuador 2024 (−2,0%):</span>
+                <a class="src" href="https://www.bce.fin.ec/la-economia-ecuatoriana-reporto-una-contraccion-anual-de-20-en-2024/" target="_blank" rel="noopener">Banco Central del Ecuador</a>
+            </li>
+        </ul>
     </footer>
 </div>
