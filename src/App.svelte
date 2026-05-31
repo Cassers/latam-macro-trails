@@ -63,16 +63,46 @@
             <TimeSeries {activeList} {theme} dataKey="pib" label="PIB" yDomain={[-19, 17]} zeroLine={true} />
         </section>
         <section class="panel rounded-xl p-4">
-            <h2 class="text-sm font-semibold mb-1">3 · Deuda pública (% del PIB) por año</h2>
+            <h2 class="text-sm font-semibold mb-1">3 · PIB per cápita (crecim. %) por año</h2>
+            <TimeSeries {activeList} {theme} dataKey="pibpc" label="PIB per cápita" yDomain={[-20, 17]} zeroLine={true} />
+        </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">
+                4 · Inflación (IPC %) por año
+                <span class="font-normal" style="color:var(--muted)">— escala symlog</span>
+            </h2>
+            <TimeSeries {activeList} {theme} dataKey="infla" label="Inflación"
+                yDomain={[-2, 230]} yTicks={[0, 3, 10, 30, 100, 200]} scaleType="symlog" />
+        </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">5 · Desempleo (%) por año</h2>
+            <TimeSeries {activeList} {theme} dataKey="desempleo" label="Desempleo" yDomain={[0, 17]} yTicks={[0, 5, 10, 15]} />
+        </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">6 · Deuda pública (% del PIB) por año</h2>
             <TimeSeries {activeList} {theme} dataKey="deuda" label="Deuda" yDomain={[18, 160]} />
         </section>
         <section class="panel rounded-xl p-4">
             <h2 class="text-sm font-semibold mb-1">
-                4 · Riesgo país (EMBI, pb) por año
+                7 · Riesgo país (EMBI, pb) por año
                 <span class="font-normal" style="color:var(--muted)">— escala log</span>
             </h2>
             <TimeSeries {activeList} {theme} dataKey="embi" label="EMBI" suffix=" pb"
-                yDomain={[80, 2400]} yTicks={[100, 200, 400, 800, 1600]} logScale={true} />
+                yDomain={[80, 2400]} yTicks={[100, 200, 400, 800, 1600]} scaleType="log" />
+        </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">
+                8 · Desigualdad — Gini por año
+                <span class="font-normal" style="color:var(--muted)">— Chile/México: bianual</span>
+            </h2>
+            <TimeSeries {activeList} {theme} dataKey="gini" label="Gini" suffix="" yDomain={[38, 56]} yTicks={[40, 45, 50, 55]} />
+        </section>
+        <section class="panel rounded-xl p-4">
+            <h2 class="text-sm font-semibold mb-1">
+                9 · Homicidios (por 100k hab.) por año
+                <span class="font-normal" style="color:var(--muted)">— hasta 2023</span>
+            </h2>
+            <TimeSeries {activeList} {theme} dataKey="homic" label="Homicidios" suffix="" yDomain={[0, 50]} yTicks={[0, 10, 20, 30, 40, 50]} />
         </section>
     </div>
 
@@ -91,8 +121,26 @@
         <span class="font-semibold" style="color:var(--text)">Fuentes verificadas:</span>
         <ul class="mt-2 space-y-1 list-disc pl-5">
             <li>
-                <span style="color:var(--text)">PIB (% crecimiento real):</span>
-                <a class="src" href="https://datos.bancomundial.org/indicador/NY.GDP.MKTP.KD.ZG" target="_blank" rel="noopener">Banco Mundial — indicador NY.GDP.MKTP.KD.ZG</a>
+                <span style="color:var(--text)">PIB y PIB per cápita (% crecimiento real):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/NY.GDP.MKTP.KD.ZG" target="_blank" rel="noopener">Banco Mundial — NY.GDP.MKTP.KD.ZG / NY.GDP.PCAP.KD.ZG</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">Inflación (IPC % anual):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/FP.CPI.TOTL.ZG" target="_blank" rel="noopener">Banco Mundial — FP.CPI.TOTL.ZG</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">Desempleo (% fuerza laboral, modelo OIT):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/SL.UEM.TOTL.ZS" target="_blank" rel="noopener">Banco Mundial — SL.UEM.TOTL.ZS</a>
+            </li>
+            <li>
+                <span style="color:var(--text)">Desigualdad (índice de Gini):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/SI.POV.GINI" target="_blank" rel="noopener">Banco Mundial — SI.POV.GINI</a>
+                — Chile y México se miden cada 2 años.
+            </li>
+            <li>
+                <span style="color:var(--text)">Homicidios (por 100k hab.):</span>
+                <a class="src" href="https://datos.bancomundial.org/indicador/VC.IHR.PSRC.P5" target="_blank" rel="noopener">Banco Mundial / UNODC — VC.IHR.PSRC.P5</a>
+                — serie hasta 2023; Perú hasta 2021.
             </li>
             <li>
                 <span style="color:var(--text)">Deuda pública (% del PIB):</span>

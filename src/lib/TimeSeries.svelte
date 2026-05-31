@@ -11,8 +11,8 @@
         label = 'PIB',
         suffix = '%',
         yDomain = [-19, 17],
-        yTicks = null,        // si null, se calcula con .ticks(5)
-        logScale = false,
+        yTicks = null,            // si null, se calcula con .ticks(5)
+        scaleType = 'linear',     // 'linear' | 'log' | 'symlog'
         zeroLine = false
     } = $props();
 
@@ -32,7 +32,8 @@
         const svg = d3.select(el).append('svg').attr('width', W).attr('height', H)
             .append('g').attr('transform', `translate(${m.left},${m.top})`);
         const x = d3.scaleLinear().domain([2016, 2024]).range([0, w]);
-        const y = (logScale ? d3.scaleLog() : d3.scaleLinear()).domain(yDomain).range([h, 0]);
+        const yScaleFn = scaleType === 'log' ? d3.scaleLog : scaleType === 'symlog' ? d3.scaleSymlog : d3.scaleLinear;
+        const y = yScaleFn().domain(yDomain).range([h, 0]);
 
         const ticks = yTicks || y.ticks(5);
         ticks.forEach(t => {
@@ -74,7 +75,7 @@
         return () => ro.disconnect();
     });
 
-    $effect(() => { activeList; theme; dataKey; logScale; draw(); });
+    $effect(() => { activeList; theme; dataKey; scaleType; draw(); });
 </script>
 
 <div bind:this={el} class="w-full" style="height:320px"></div>
